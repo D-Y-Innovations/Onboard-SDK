@@ -11,9 +11,12 @@
 
 #include "dji_vehicle.hpp"
 #include <new>
+#include <iostream>
+#include "dy_thread.hpp"
 
 using namespace DJI;
 using namespace DJI::OSDK;
+using namespace DY;
 
 Vehicle::Vehicle(const char* device, uint32_t baudRate, bool threadSupport)
   : protocolLayer(NULL)
@@ -337,6 +340,21 @@ Vehicle::initPlatformSupport()
       DERROR("Failed to initialize read thread!\n");
     }
   }
+#elif defined(_WIN32)
+    if (threadSUpported)
+    {
+        this->callbackThread = new (std::nothrow) DyThread(this, 3);
+        if (NULL == this->callbackThread)
+        {
+            DERROR("Failed to initialze read callback thread!\n");
+        }
+
+        this->readThread = new (std::nothrow) DyThread(this, 2);
+        if (NULL == this->readThread)
+        {
+            DERROR("Failed to initialize read thread!\n");
+        }
+    }
 #endif
   bool readThreadStatus = readThread->createThread();
   bool cbThreadStatus   = callbackThread->createThread();

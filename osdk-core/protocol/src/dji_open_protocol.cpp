@@ -14,8 +14,14 @@
 #include <stdio.h>
 #endif
 
+#ifdef _WIN32
+#include "dy_serial_device.hpp"
+#include "dy_thread_manager.hpp"
+#endif
+
 using namespace DJI;
 using namespace DJI::OSDK;
+using namespace DY;
 
 //! Constructor
 Protocol::Protocol(const char* device, uint32_t baudrate)
@@ -42,6 +48,9 @@ Protocol::Protocol(const char* device, uint32_t baudrate)
 #elif defined(__linux__)
   this->serialDevice = new LinuxSerialDevice(device, baudrate);
   this->threadHandle = new PosixThreadManager();
+#elif defined(_WIN32)
+    this->serialDevice = new DyHardDriver();
+    this->threadHandle = new DyThreadManager();
 #endif
 
   //! Step 1.2: Initialize the hardware driver
