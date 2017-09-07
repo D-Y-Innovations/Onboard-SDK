@@ -21,7 +21,9 @@
 
 using namespace DJI;
 using namespace DJI::OSDK;
+#ifdef _WIN32
 using namespace DY;
+#endif
 
 //! Constructor
 Protocol::Protocol(const char* device, uint32_t baudrate)

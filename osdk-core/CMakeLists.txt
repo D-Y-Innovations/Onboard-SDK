@@ -53,6 +53,7 @@ include_directories(
   hal/inc
   utility/inc
   platform/default/inc
+  dy/inc/
 )
 
 # Use this if more platform is supported
@@ -71,6 +72,7 @@ FILE(GLOB OSDK_LIB_SRCS
   hal/src/*.cpp
   utility/src/*.cpp
   platform/default/src/*.cpp
+  dy/src/*.cpp
   )
 
 # Use this if more platform is supported
