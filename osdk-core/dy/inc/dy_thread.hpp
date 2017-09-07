@@ -16,6 +16,7 @@
 #ifndef DY_THREAD_H
 #define DY_THREAD_H
 
+#ifdef _WIN32
 #include <memory>
 #include <thread>
 #include "dji_vehicle.hpp"
@@ -44,4 +45,5 @@ namespace DY
 	};
 }	//namespace DY
 
+#endif
 #endif	//DY_THREAD_H

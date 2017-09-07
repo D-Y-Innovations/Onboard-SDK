@@ -15,10 +15,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#endif
 #include <iostream>
 #include <sstream>
-#include "dy_utils.hpp"
 #include "dy_thread.hpp"
 
 using namespace std;
@@ -100,7 +98,7 @@ void DyThread::send_call(void *param)
 	while (true)
 	{
 		pVehicle->protocolLayer->sendPoll();
-		DyUtils::Sleep(10);
+        Sleep(10);
 	}
 }
 
@@ -113,7 +111,7 @@ void DyThread::read_call(void *param)
 		// receive() implemented on the OpenProtocol side
 		recvContainer = pVehicle->protocolLayer->receive();
 		pVehicle->processReceivedData(recvContainer);
-		DyUtils::Sleep(10); //! @note CPU optimization, reduce the CPU usage a lot
+		Sleep(10); //! @note CPU optimization, reduce the CPU usage a lot
 	}
 
 	DDEBUG("Quit read function\n");
@@ -125,8 +123,9 @@ void DyThread::callback_call(void* param)
 	while (!(pVehicle->getStopCond()))
 	{
 		pVehicle->callbackPoll();
-		DyUtils::Sleep(10); //! @note CPU optimization, reduce the CPU usage a lot
+		Sleep(10); //! @note CPU optimization, reduce the CPU usage a lot
 	}
 
 	DDEBUG("Quit callback function\n");
 }
+#endif

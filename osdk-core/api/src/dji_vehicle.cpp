@@ -12,11 +12,15 @@
 #include "dji_vehicle.hpp"
 #include <new>
 #include <iostream>
+#ifdef _WIN32
 #include "dy_thread.hpp"
+#endif
 
 using namespace DJI;
 using namespace DJI::OSDK;
+#ifdef _WIN32
 using namespace DY;
+#endif
 
 Vehicle::Vehicle(const char* device, uint32_t baudRate, bool threadSupport)
   : protocolLayer(NULL)
