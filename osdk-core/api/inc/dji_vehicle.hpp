@@ -79,6 +79,8 @@ public:
 public:
   Vehicle(const char* device, uint32_t baudRate, bool threadSupport);
   Vehicle(bool threadSupport);
+  //! implement by DY innovations.
+  Vehicle(bool threadSupport, HardDriver* pDriver, ThreadAbstract* pThread, Thread* pReadThread, Thread* pCallbackThread);
   ~Vehicle();
 
   Protocol*            protocolLayer;
@@ -294,13 +296,19 @@ private:
   /*! @brief Initialize minimal Vehicle components
 */
   void mandatorySetUp();
+  // implemented by DY innovations.
+  void mandatorySetUp(HardDriver* pDriver, ThreadAbstract* pThread, Thread* pReadThread, Thread* pCallbackThread);
   bool initOpenProtocol();
+  // implemented by DY innovations.
+  bool initOpenProtocol(HardDriver* pDriver, ThreadAbstract* pThread);
 
   /*! @brief Initialize the right platform-specific implementations
    *  @details
    *  @return false if error, true if success
    */
   bool initPlatformSupport();
+  //implemented by DY Innovations.
+  bool initPlatformSupport(Thread* pReadThread, Thread* pCallbackThread);
   void initCallbacks();
   void initCMD_SetSupportMatrix();
   bool initSubscriber();

@@ -12,15 +12,9 @@
 #include "dji_vehicle.hpp"
 #include <new>
 #include <iostream>
-#ifdef _WIN32
-#include "dy_thread.hpp"
-#endif
 
 using namespace DJI;
 using namespace DJI::OSDK;
-#ifdef _WIN32
-using namespace DY;
-#endif
 
 Vehicle::Vehicle(const char* device, uint32_t baudRate, bool threadSupport)
   : protocolLayer(NULL)
@@ -68,6 +62,26 @@ Vehicle::Vehicle(bool threadSupport)
   mandatorySetUp();
 }
 
+//! implement by DY innovations.
+Vehicle::Vehicle(bool threadSupport, HardDriver* pDriver, ThreadAbstract* pThread, Thread* pReadThread, Thread* pCallbackThread)
+    : protocolLayer(NULL)
+    , subscribe(NULL)
+    , broadcast(NULL)
+    , control(NULL)
+    , camera(NULL)
+    , mfio(NULL)
+    , moc(NULL)
+    , missionManager(NULL)
+    , hardSync(NULL)
+    , readThread(NULL)
+    , callbackThread(NULL)
+{
+    this->threadSupported = threadSupport;
+    callbackId = 0;
+
+    mandatorySetUp(pDriver, pThread, pReadThread, pCallbackThread);
+}
+
 void
 Vehicle::mandatorySetUp()
 {
@@ -109,6 +123,45 @@ Vehicle::mandatorySetUp()
   }
 }
 
+void Vehicle::mandatorySetUp(HardDriver* pDriver, ThreadAbstract* pThread, Thread* pReadThread, Thread* pCallbackThread)
+{
+      /*
+   * Initialize buffers for threaded callbacks
+   */
+  if (this->threadSupported)
+  {
+    // We only need a buffer of recvContainers if we are using threads
+    this->nbCallbackRecvContainer = new RecvContainer[200];
+    this->circularBuffer = new CircularBuffer();
+  }
+
+  /*
+   * @note Initialize predefined callbacks
+   */
+  initCallbacks();
+
+  /*
+   * @note Initialize CMD_SET support matrix to identify
+   * CMD_SET availability for paritcular FW version
+   */
+  initCMD_SetSupportMatrix();
+
+  /*
+   * @note Initialize communication layer
+   */
+  if (!initOpenProtocol(pDriver, pThread))
+  {
+    DERROR("Failed to initialize Protocol Layer!\n");
+  }
+
+  /*
+   * @note Initialize read thread
+   */
+  if (!initPlatformSupport(pReadThread, pCallbackThread))
+  {
+    DERROR("Failed to initialize platform support!\n");
+  }
+}
 
 void
 Vehicle::functionalSetUp()
@@ -286,6 +339,18 @@ Vehicle::initOpenProtocol()
   return true;
 }
 
+bool 
+Vehicle::initOpenProtocol(HardDriver* pDriver, ThreadAbstract* pThread)
+{
+  this->protocolLayer =
+    new (std::nothrow) Protocol(this->device, this->baudRate, pDriver, pThread);
+  if (this->protocolLayer == 0)
+  {
+    return false;
+  }
+
+  return true;
+}
 
 bool
 Vehicle::initPlatformSupport()
@@ -344,22 +409,31 @@ Vehicle::initPlatformSupport()
       DERROR("Failed to initialize read thread!\n");
     }
   }
-#elif defined(_WIN32)
-    if (threadSUpported)
-    {
-        this->callbackThread = new (std::nothrow) DyThread(this, 3);
-        if (NULL == this->callbackThread)
-        {
-            DERROR("Failed to initialze read callback thread!\n");
-        }
-
-        this->readThread = new (std::nothrow) DyThread(this, 2);
-        if (NULL == this->readThread)
-        {
-            DERROR("Failed to initialize read thread!\n");
-        }
-    }
 #endif
+  bool readThreadStatus = readThread->createThread();
+  bool cbThreadStatus   = callbackThread->createThread();
+  return (readThreadStatus && cbThreadStatus);
+}
+
+//implemented by DY Innovations.
+bool
+Vehicle::initPlatformSupport(Thread* pReadThread, Thread* pCallbackThread)
+{
+  if (threadSupported)
+  {
+    this->callbackThread = pCallbackThread;
+    if (this->callbackThread == 0)
+    {
+      DERROR("Failed to initialize read callback thread!\n");
+    }
+
+    this->readThread = pReadThread;
+    if (this->readThread == 0)
+    {
+      DERROR("Failed to initialize read thread!\n");
+    }
+  }
+
   bool readThreadStatus = readThread->createThread();
   bool cbThreadStatus   = callbackThread->createThread();
   return (readThreadStatus && cbThreadStatus);

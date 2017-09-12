@@ -194,7 +194,10 @@ class Protocol
 public:
   //! Constructor
   Protocol(const char* device, uint32_t baudRate);
-
+  
+  //! Constructor
+  Protocol(const char* device, uint32_t baudRate,
+            HardDriver* pDriver, ThreadAbstract* pThread);
   //! Destructor
   ~Protocol()
   {

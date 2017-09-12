@@ -14,16 +14,8 @@
 #include <stdio.h>
 #endif
 
-#ifdef _WIN32
-#include "dy_serial_device.hpp"
-#include "dy_thread_manager.hpp"
-#endif
-
 using namespace DJI;
 using namespace DJI::OSDK;
-#ifdef _WIN32
-using namespace DY;
-#endif
 
 //! Constructor
 Protocol::Protocol(const char* device, uint32_t baudrate)
@@ -50,9 +42,6 @@ Protocol::Protocol(const char* device, uint32_t baudrate)
 #elif defined(__linux__)
   this->serialDevice = new LinuxSerialDevice(device, baudrate);
   this->threadHandle = new PosixThreadManager();
-#elif defined(_WIN32)
-    this->serialDevice = new DyHardDriver();
-    this->threadHandle = new DyThreadManager();
 #endif
 
   //! Step 1.2: Initialize the hardware driver
@@ -63,6 +52,21 @@ Protocol::Protocol(const char* device, uint32_t baudrate)
 
   //! Step 2: Initialize the ProtocolLayer
   init(this->serialDevice, this->serialDevice->getMmu());
+}
+
+//! COnstructor, implemented by DY. innovations.
+Protocol::Protocol(const char* device, uint32_t baudrate,
+    HardDriver* pDriver, ThreadAbstract* pThread)
+{
+    //! Step 1.1: Instantiate a hardware driver
+    this->serialDevice = pDriver;
+    this->threadHandle = pThread;
+
+    //! Step 1.2: Initialize the hardware driver
+    this->threadHandle->init();
+
+    //! Step 2: Initialize the protocolLayer
+    init(this->serialDevice, this->serialDevice->getMmu());
 }
 
 /***************************Init*******************************************/
